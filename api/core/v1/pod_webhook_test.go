@@ -6,12 +6,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/enix/kube-image-keeper/controllers"
+	"github.com/enix/kube-image-keeper/internal/controller/core"
 	"github.com/enix/kube-image-keeper/internal/registry"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var podStub = corev1.Pod{
@@ -43,7 +42,7 @@ func TestRewriteImages(t *testing.T) {
 		}
 
 		ir.RewriteImages(&podStub, false)
-		g.Expect(podStub.Annotations[controllers.AnnotationRewriteImagesName]).To(Equal("false"))
+		g.Expect(podStub.Annotations[core.AnnotationRewriteImagesName]).To(Equal("false"))
 
 		ir.RewriteImages(&podStub, true)
 
@@ -62,7 +61,7 @@ func TestRewriteImages(t *testing.T) {
 		g.Expect(podStub.Spec.InitContainers).To(Equal(rewrittenInitContainers))
 		g.Expect(podStub.Spec.Containers).To(Equal(rewrittenContainers))
 
-		g.Expect(podStub.Labels[controllers.LabelManagedName]).To(Equal("true"))
+		g.Expect(podStub.Labels[core.LabelManagedName]).To(Equal("true"))
 
 		g.Expect(podStub.Annotations[registry.ContainerAnnotationKey("a", true)]).To(Equal("original-init"))
 		g.Expect(podStub.Annotations[registry.ContainerAnnotationKey("b", false)]).To(Equal("original"))
@@ -72,7 +71,7 @@ func TestRewriteImages(t *testing.T) {
 		g.Expect(podStub.Annotations[registry.ContainerAnnotationKey("f", false)]).To(Equal(""))
 
 		ir.RewriteImages(&podStub, false)
-		g.Expect(podStub.Annotations[controllers.AnnotationRewriteImagesName]).To(Equal("true"))
+		g.Expect(podStub.Annotations[core.AnnotationRewriteImagesName]).To(Equal("true"))
 	})
 }
 
@@ -105,7 +104,7 @@ func TestRewriteImagesWithIgnore(t *testing.T) {
 		g.Expect(podStub.Spec.InitContainers).To(Equal(rewrittenInitContainers))
 		g.Expect(podStub.Spec.Containers).To(Equal(rewrittenContainers))
 
-		g.Expect(podStub.Labels[controllers.LabelManagedName]).To(Equal("true"))
+		g.Expect(podStub.Labels[core.LabelManagedName]).To(Equal("true"))
 
 		g.Expect(podStub.Annotations[registry.ContainerAnnotationKey("a", true)]).To(Equal(""))
 		g.Expect(podStub.Annotations[registry.ContainerAnnotationKey("b", false)]).To(Equal(""))
@@ -113,20 +112,6 @@ func TestRewriteImagesWithIgnore(t *testing.T) {
 		g.Expect(podStub.Annotations[registry.ContainerAnnotationKey("d", false)]).To(Equal("185.145.250.247:30042/alpine"))
 		g.Expect(podStub.Annotations[registry.ContainerAnnotationKey("e", false)]).To(Equal(""))
 		g.Expect(podStub.Annotations[registry.ContainerAnnotationKey("f", false)]).To(Equal(""))
-	})
-}
-
-func TestInjectDecoder(t *testing.T) {
-	g := NewWithT(t)
-	t.Run("Inject decoder", func(t *testing.T) {
-		ir := ImageRewriter{}
-		decoder := &admission.Decoder{}
-
-		g.Expect(ir.decoder).To(BeNil())
-		err := ir.InjectDecoder(decoder)
-		g.Expect(err).To(Not(HaveOccurred()))
-		g.Expect(ir.decoder).To(Not(BeNil()))
-		g.Expect(ir.decoder).To(Equal(decoder))
 	})
 }
 

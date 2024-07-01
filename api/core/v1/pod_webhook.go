@@ -11,7 +11,7 @@ import (
 
 	_ "crypto/sha256"
 
-	"github.com/enix/kube-image-keeper/controllers"
+	"github.com/enix/kube-image-keeper/internal/controller/core"
 	"github.com/enix/kube-image-keeper/internal/registry"
 	"github.com/google/go-containerregistry/pkg/name"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -37,7 +37,7 @@ type ImageRewriter struct {
 	IgnoreImages           []*regexp.Regexp
 	IgnorePullPolicyAlways bool
 	ProxyPort              int
-	decoder                *admission.Decoder
+	Decoder                *admission.Decoder
 }
 
 type PodInitializer struct {
@@ -56,7 +56,7 @@ func (a *ImageRewriter) Handle(ctx context.Context, req admission.Request) admis
 		WithName("webhook.pod")
 
 	pod := &corev1.Pod{}
-	err := a.decoder.Decode(req, pod)
+	err := a.Decoder.Decode(req, pod)
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
 	}
@@ -82,10 +82,10 @@ func (a *ImageRewriter) RewriteImages(pod *corev1.Pod, isNewPod bool) []Rewritte
 		pod.Labels = map[string]string{}
 	}
 
-	rewriteImages := pod.Annotations[controllers.AnnotationRewriteImagesName] == "true" || isNewPod
+	rewriteImages := pod.Annotations[core.AnnotationRewriteImagesName] == "true" || isNewPod
 
-	pod.Labels[controllers.LabelManagedName] = "true"
-	pod.Annotations[controllers.AnnotationRewriteImagesName] = fmt.Sprintf("%t", rewriteImages)
+	pod.Labels[core.LabelManagedName] = "true"
+	pod.Annotations[core.AnnotationRewriteImagesName] = fmt.Sprintf("%t", rewriteImages)
 
 	rewrittenImages := []RewrittenImage{}
 
@@ -104,12 +104,6 @@ func (a *ImageRewriter) RewriteImages(pod *corev1.Pod, isNewPod bool) []Rewritte
 	}
 
 	return rewrittenImages
-}
-
-// InjectDecoder injects the decoder
-func (a *ImageRewriter) InjectDecoder(d *admission.Decoder) error {
-	a.decoder = d
-	return nil
 }
 
 func (a *ImageRewriter) handleContainer(pod *corev1.Pod, container *corev1.Container, annotationKey string, rewriteImage bool) RewrittenImage {
@@ -181,14 +175,14 @@ func (a *ImageRewriter) isImageRewritable(container *corev1.Container) error {
 func (p *PodInitializer) Start(ctx context.Context) error {
 	setupLog := ctrl.Log.WithName("setup.pods")
 	pods := corev1.PodList{}
-	err := p.Client.List(context.TODO(), &pods)
+	err := p.Client.List(ctx, &pods)
 	if err != nil {
 		return err
 	}
 
 	for _, pod := range pods.Items {
 		setupLog.Info("patching " + pod.Namespace + "/" + pod.Name)
-		err := p.Client.Patch(context.Background(), &pod, client.RawPatch(types.JSONPatchType, []byte("[]")))
+		err := p.Client.Patch(ctx, &pod, client.RawPatch(types.JSONPatchType, []byte("[]")))
 		if err != nil && !apierrors.IsNotFound(err) {
 			return err
 		}
