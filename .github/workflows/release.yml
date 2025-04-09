@@ -92,11 +92,11 @@ jobs:
         run: make generate
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         continue-on-error: true
         with:
           version: latest
-          args: --timeout 3m --verbose
+          args: --timeout 5m --verbose
 
       - name: Run unit tests
         run: |
