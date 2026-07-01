@@ -17,7 +17,7 @@
 //
 // Versioned docs are authored as plain GitHub markdown (no `slug:` frontmatter).
 // Astro's loader and the relative-link rewriter both github-slugify the path,
-// which would turn `2.2` into `22` and break routes/links — so we inject an
+// which would turn `x.y` into `xy` and break routes/links — so we inject an
 // explicit `slug: <slug>/<path>` into each versioned page here, on disk, before
 // the collection loads (both systems read frontmatter `slug`).
 //

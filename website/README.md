@@ -21,12 +21,12 @@ The site requires **Node.js 24** (matching the CI `withastro/action` config); th
 The site serves multiple documentation versions via the [`starlight-versions`](https://starlight-versions.vercel.app) plugin. The set of versions is declared once in [`versions.mjs`](./versions.mjs) and consumed by both [`astro.config.mjs`](./astro.config.mjs) (which feeds `{ slug, label }` to the plugin) and [`scripts/sync-docs.mjs`](./scripts/sync-docs.mjs) (which sources each version's content).
 
 - The **current** version (labelled `main` in the version picker) is the live `../docs` tree, served at the site root (`/configuration/`, `/crds/`, …).
-- Each **archived** version's docs live on that version's **maintenance branch** (`ref` in `versions.mjs`, e.g. `2.2.x`) and are served under the version slug (`/2.2/configuration/`, …). There is **no committed copy** of the versioned docs in this branch. The maintenance branch also carries the release-line code, so a version has a single branch for both docs and code, and doc fixes are ordinary commits there.
+- Each **archived** version's docs live on that version's **maintenance branch** (`ref` in `versions.mjs`, e.g. `2.3.x`) and are served under the version slug (`/2.3/configuration/`, …). There is **no committed copy** of the versioned docs in this branch. The maintenance branch also carries the release-line code, so a version has a single branch for both docs and code, and doc fixes are ordinary commits there.
 
 At build time, `sync-docs` generates the gitignored collection dirs:
 
-- For each version it runs `git archive <ref> docs` and lays the result under `src/content/docs/<slug>/`. The branch's docs are plain GitHub markdown with **no `slug:` frontmatter**; `sync-docs` injects `slug: <slug>/<path>` into each page on disk, because Astro's loader and the relative-link rewriter both github-slugify the path — which would turn `2.2` into `22` and break routes/links.
-- That branch also carries `docs/version-config.json` (the version's Starlight sidebar); `sync-docs` lifts it into `src/content/versions/<slug>.json` (the `versions` content collection, see [`src/content.config.ts`](./src/content.config.ts)) and does not render it as a page. Sidebar slugs in it are relative to the version (`"configuration"`, not `"2.2/…"`); the plugin prepends the version slug.
+- For each version it runs `git archive <ref> docs` and lays the result under `src/content/docs/<slug>/`. The branch's docs are plain GitHub markdown with **no `slug:` frontmatter**; `sync-docs` injects `slug: <slug>/<path>` into each page on disk, because Astro's loader and the relative-link rewriter both github-slugify the path — which would turn `2.3` into `23` and break routes/links.
+- That branch also carries `docs/version-config.json` (the version's Starlight sidebar); `sync-docs` lifts it into `src/content/versions/<slug>.json` (the `versions` content collection, see [`src/content.config.ts`](./src/content.config.ts)) and does not render it as a page. Sidebar slugs in it are relative to the version (`"configuration"`, not `"2.3/…"`); the plugin prepends the version slug.
 - The website-only [`src/content/overlay/`](./src/content/overlay/) pages (currently the use-cases landing `use-cases/index.mdx`) are copied into **every** version, not just the current one (the homepage is a normal `../docs/index.md` page, so it is per-version automatically). Note the use-cases landing's `getCollection` is not version-scoped, so each version's `/…/use-cases/` index currently lists the **current** version's use cases — the per-version use-case pages themselves are correct and in the sidebar.
 
 Because every configured version already has its docs on disk at build time, the plugin never triggers its built-in "archive the current docs" behaviour. The build therefore needs git history for the maintenance branches — CI's checkout uses `fetch-depth: 0` (see [`.github/workflows/website.yaml`](../.github/workflows/website.yaml)).
@@ -73,7 +73,7 @@ To publish version `X.Y` (e.g. when cutting a release):
    ```js
    export const versions = [
      { slug: 'X.Y', label: 'vX.Y', ref: 'X.Y.x' },
-     { slug: '2.2', label: 'v2.2', ref: '2.2.x' },
+     { slug: '2.3', label: 'v2.3', ref: '2.3.x' },
    ];
    ```
 
