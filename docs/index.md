@@ -30,6 +30,7 @@ hero:
 ## Under the hood
 
 It relies on three core mechanisms:
+
 - [**Image routing**](/concepts/image-routing/): rewrites Pod image paths on the fly during their creation to redirect them to a functional registry.
 - **Image copy**: mirror images **used by the local cluster** accross registries, building a virtual, highly available registry.
 - **Image monitoring**: continuously tracks the availability of Pod images **used within the local cluster** across various registries.
@@ -44,3 +45,4 @@ Developed by Enix, kube-image-keeper is a battle-tested solution currently runni
 - A reference for the [operator configuration file](./configuration.md) (routing, monitoring, metrics)
 - A collection of documented [use cases](./use-cases/)
 - A [development guide](./guides/development.md)
+- A [troubleshooting guide](./guides/troubleshooting.md) for common operational issues
