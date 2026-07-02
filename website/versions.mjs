@@ -12,6 +12,5 @@
 // - astro.config.mjs feeds { slug, label } to the starlight-versions plugin.
 // - sync-docs.mjs uses { slug, ref } to fetch each version's docs and config.
 export const versions = [
-  { slug: '2.2', label: 'v2.2', ref: '2.2.x' },
   { slug: '2.3', label: 'v2.3', ref: '2.3.x' },
 ];
